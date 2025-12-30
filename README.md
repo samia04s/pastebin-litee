@@ -1,36 +1,148 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pastebin-Lite
 
-## Getting Started
+A lightweight Pastebin-like web application where users can create text pastes and share a link to view them.  
+Pastes can optionally expire based on time (TTL) or number of views.
 
-First, run the development server:
+This project was built as part of a take-home assignment and is evaluated primarily using automated tests.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Deployed URL
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+👉 https://pastebin-litee.vercel.app
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🧰 Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Framework:** Next.js (App Router)
+- **Runtime:** Node.js
+- **Database:** MongoDB Atlas
+- **Deployment:** Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ✨ Features
 
-## Deploy on Vercel
+- Create a paste with arbitrary text
+- Get a shareable URL for the paste
+- View paste via API or browser
+- Optional constraints:
+  - ⏱ Time-based expiry (TTL)
+  - 👀 View-count limit
+- Secure HTML rendering (no script execution)
+- Deterministic time support for automated testing
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📡 API Endpoints
+
+### Health Check
+GET /api/healthz
+
+Response:
+```json
+{ "ok": true }
+
+Create Paste
+POST /api/pastes
+
+Request body:
+{
+  "content": "Hello world",
+  "ttl_seconds": 60,
+  "max_views": 3
+}
+
+Response:
+{
+  "id": "abc123",
+  "url": "https://pastebin-litee.vercel.app/p/abc123"
+}
+
+Fetch Paste (API)
+GET /api/pastes/:id
+
+Response:
+{
+  "content": "Hello world",
+  "remaining_views": 2,
+  "expires_at": "2026-01-01T00:00:00.000Z"
+}
+Each successful fetch counts as a view
+Returns 404 if:
+1.Paste does not exist
+2.Paste has expired
+3.View limit is exceeded
+
+View Paste (HTML)
+GET /p/:id
+
+Returns an HTML page containing the paste
+Content is rendered safely (no script execution)
+Returns 404 if the paste is unavailable
+
+🗄 Persistence Layer
+
+This project uses MongoDB Atlas as the persistence layer.
+
+Reasoning:
+
+Serverless-safe (works reliably on Vercel)
+
+Survives across requests and deployments
+
+Supports atomic updates (used for view-count decrement)
+
+No in-memory or global mutable state is used.
+
+🧑‍💻 Run Locally
+
+1️⃣ Clone the repository
+git clone https://github.com/samia04s/Pastebin-lite.git
+cd Pastebin-lite
+
+2️⃣ Install dependencies
+npm install
+
+3️⃣ Configure environment variables
+
+Create a .env.local file:
+
+MONGODB_URI=your_mongodb_atlas_connection_string
+
+(Optional for testing)
+
+TEST_MODE=1
+
+4️⃣ Start the development server:npm run dev
+
+
+The app will run at:http://localhost:3000
+
+⚠️ Notes & Design Decisions
+
+1.No hardcoded localhost URLs are used in production code
+2.All API responses return valid JSON
+3.HTML rendering escapes content to prevent XSS
+4.View counts never go negative
+5.TTL and view limits are enforced atomically
+6.Designed to pass automated tests under light concurrent load
+
+Assignment Checklist
+
+ ✅Health check endpoint
+
+ ✅Paste creation
+
+ ✅Paste retrieval (API & HTML)
+
+ ✅TTL support
+
+ ✅View-count limit
+
+ ✅Deterministic time testing
+
+ ✅Persistent storage
+
+ ✅Deployed on Vercel
